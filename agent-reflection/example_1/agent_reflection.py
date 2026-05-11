@@ -11,6 +11,8 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=gemini_api_key)
 
 
+
+
 def generate_chart_code(client:genai.Client,data_frame:str,instruction:str,out_path_v1:str):
     prompt = f"""
     You are a data visualization expert. Given the following dataframe, generate Python code using matplotlib to create a line chart of the inflation rates for Sri Lanka in 2024 and 2025.
@@ -118,11 +120,6 @@ def reflect_on_image_and_regenerate(client:genai.Client,chart_path: str,instruct
         return match.group(1).strip()
     return None
 
-
-
-
-
-
 def run_workflow():
     df = pd.read_csv("sri_lanka_inflation_2024_2025.csv")
     
@@ -139,8 +136,8 @@ def run_workflow():
     out_path_v2="chart_v2.png",
     code_v1=execute_code_draft,
     )
-
     exec(execute_code_final,{"df":df})
     
     
     
+run_workflow()

@@ -37,6 +37,16 @@ The script in `agent_reflection.py`:
 - Sends the chart and code to a second model for critique and improvement.
 - Executes the refined code to create `chart_v2.png`.
 
+## Before and After Reflection
+
+The images below show the output before and after the reflection pass.
+
+| Before Reflection | After Reflection |
+| --- | --- |
+| ![Chart v1](agent-reflection/example_1/chart_v1.png) | ![Chart v2](agent-reflection/example_1/chart_v2.png) |
+
+The first chart is the initial model output. The second chart is the revised version after critique and improvement.
+
 ## Setup
 
 ### 1. Create and activate a virtual environment (recommended)
