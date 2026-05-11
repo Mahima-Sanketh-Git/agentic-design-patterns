@@ -20,14 +20,10 @@ This demonstrates how reflection can improve output quality with a critique-and-
 agent-design-pattern/
 |- README.md
 |- requirements.txt
-|- notes/
-|  |- agent-patterns.md
 |- agent-reflection/
    |- agent_reflection.py
    |- requirements.txt
    |- sri_lanka_inflation_2024_2025.csv
-   |- chart_v1.png
-   |- chart_v2.png
 ```
 
 ## Reflection Example
