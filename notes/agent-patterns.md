@@ -1,2 +1,0 @@
-# Agentic Design Patterns
-
