@@ -19,18 +19,27 @@ This demonstrates how reflection can improve output quality with a critique-and-
 ```text
 agent-design-pattern/
 |- README.md
-|- requirements.txt
 |- agent-reflection/
-   |- agent_reflection.py
-   |- requirements.txt
-   |- sri_lanka_inflation_2024_2025.csv
+   |- example_1/
+   |  |- agent_reflection.py
+   |  |- requirements.txt
+   |  |- sri_lanka_inflation_2024_2025.csv
+   |  |- chart_v1.png
+   |  |- chart_v2.png
+   |- example_2/
+      |- agent_reflection_v2.py
+      |- requirements.txt
+      |- utils.py
+|- agent-tools-selection/
+   |- example_1/
+      |- agent_tools_selection.py
 ```
 
 ## Reflection Example
 
-Location: `agent-reflection/`
+Location: `agent-reflection/example_1/`
 
-The script in `agent_reflection.py`:
+The script in `agent-reflection/example_1/agent_reflection.py`:
 - Loads inflation data from `sri_lanka_inflation_2024_2025.csv`.
 - Prompts a model to generate plotting code.
 - Executes generated code to create `chart_v1.png`.
@@ -46,6 +55,20 @@ The images below show the output before and after the reflection pass.
 | ![Chart v1](agent-reflection/example_1/chart_v1.png) | ![Chart v2](agent-reflection/example_1/chart_v2.png) |
 
 The first chart is the initial model output. The second chart is the revised version after critique and improvement.
+
+## 2. Tools Use
+
+The tools-use example shows how an agent can select and call functions from a predefined tool set.
+
+Location: `agent-tools-selection/example_1/`
+
+The script in `agent_tools_selection.py`:
+- Gets the current time.
+- Fetches weather for the user’s location from their IP address.
+- Writes the weather summary to a text file.
+- Generates a QR code for a website, using an optional embedded image.
+
+This example demonstrates basic tool selection, function calling, and tool-result handling in a single workflow.
 
 ## Setup
 
@@ -85,6 +108,8 @@ If successful, the script will generate or update:
 - `chart_v1.png`
 - `chart_v2.png`
 
+To run the tools-use example, move into `agent-tools-selection/example_1` and run `agent_tools_selection.py`.
+
 ## Notes
 
 - The reflection pattern is useful when first-pass outputs are acceptable but not polished.
@@ -97,3 +122,4 @@ If successful, the script will generate or update:
 - Add a validation step before executing generated code.
 - Add automated checks to compare chart quality between versions.
 - Add more design patterns (planning, tool use, multi-agent orchestration).
+
