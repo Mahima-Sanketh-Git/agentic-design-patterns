@@ -66,6 +66,22 @@ The tools-use example shows how an agent can select and call functions from a pr
 
 Recent updates add exception handling around network requests, file writes, QR generation, and model response parsing during function-calling loops.
 
+## 3. Planning Pattern
+
+Planning is the agentic pattern where the model first decides what to do in structured steps, then executes those steps in code.
+
+In this repository, the idea can be understood as:
+- JSON as the planning layer: a structured plan that lists the goal, steps, tools, and expected output.
+- Code as the action layer: Python code that carries out the planned steps, calls tools, and produces results.
+
+This separation helps the agent stay organized. The JSON plan makes the reasoning easy to inspect and adjust, while the code handles the actual work.
+
+Typical flow:
+1. Define the goal.
+2. Break the goal into JSON planning steps.
+3. Execute the steps in code.
+4. Check the result and refine the plan if needed.
+
 ## 3. Research Agent Pattern
 
 Location: `research-agent/`
