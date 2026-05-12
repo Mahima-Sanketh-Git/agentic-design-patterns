@@ -45,25 +45,32 @@ def generate_chart_code(client:genai.Client,data_frame:str,instruction:str,out_p
     
     Return ONLY the code wrapped in <execute_python> tags.
     """
-    
-    response = client.models.generate_content(
-        model="gemini-3.1-flash-lite",
-        contents=prompt
-    )
-    
-    print(response.text)
-    
-    match  = re.search(r'<execute_python>(.*?)</execute_python>',response.text,re.DOTALL)
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
 
-    if match:
-        return match.group(1).strip()
-    return None
+        print(response.text)
+
+        match = re.search(r'<execute_python>(.*?)</execute_python>', response.text, re.DOTALL)
+
+        if match:
+            return match.group(1).strip()
+        print("No executable code block was returned.")
+        return None
+    except Exception as exc:
+        print(f"Chart code generation failed: {exc}")
+        return None
 
 def reflect_on_image_and_regenerate(client:genai.Client,chart_path: str,instruction: str,out_path_v2: str,code_v1: str,):
-
-    with open(chart_path,"rb") as f:
-        encode = base64.b64encode(f.read())
-        encoded_str = encode.decode("utf-8")
+    try:
+        with open(chart_path, "rb") as f:
+            encode = base64.b64encode(f.read())
+            encoded_str = encode.decode("utf-8")
+    except Exception as exc:
+        print(f"Failed to read chart image: {exc}")
+        return None
         
     prompt = f"""
     You are a data visualization expert.
@@ -99,45 +106,74 @@ def reflect_on_image_and_regenerate(client:genai.Client,chart_path: str,instruct
     {instruction}
     """
     
-    response = client.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents={
-            "parts":[
-                {"text":prompt},
-                {
-                    "inline_data":{
-                        "mime_type":"image/png",
-                        "data":encoded_str
+    try:
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents={
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inline_data": {
+                            "mime_type": "image/png",
+                            "data": encoded_str
+                        }
                     }
-                }
-            ]
-        }
-    )
-    
-    match  = re.search(r'<execute_python>(.*?)</execute_python>',response.text,re.DOTALL)
+                ]
+            }
+        )
 
-    if match:
-        return match.group(1).strip()
-    return None
+        match = re.search(r'<execute_python>(.*?)</execute_python>', response.text, re.DOTALL)
+
+        if match:
+            return match.group(1).strip()
+        print("No refined executable code block was returned.")
+        return None
+    except Exception as exc:
+        print(f"Chart reflection failed: {exc}")
+        return None
 
 def run_workflow():
-    df = pd.read_csv("sri_lanka_inflation_2024_2025.csv")
-    
-    print(df.head(5))    
-    
-    execute_code_draft = generate_chart_code(client=client,data_frame=df,instruction="Create a plot comparing inflation of Sri Lanka in 2024 and 2025 using the data in sri_lanka_inflation_2024_2025.csv",out_path_v1="chart_v1.png")
+    try:
+        df = pd.read_csv("sri_lanka_inflation_2024_2025.csv")
 
-    exec(execute_code_draft,{"df":df})
-    
-    execute_code_final = reflect_on_image_and_regenerate(
-    client=client,
-    chart_path="chart_v1.png",            
-    instruction="Create a plot comparing inflation of Sri Lanka in 2024 and 2025 using the data in sri_lanka_inflation_2024_2025.csv", 
-    out_path_v2="chart_v2.png",
-    code_v1=execute_code_draft,
-    )
-    exec(execute_code_final,{"df":df})
-    
-    
-    
-run_workflow()
+        print(df.head(5))
+
+        execute_code_draft = generate_chart_code(
+            client=client,
+            data_frame=df,
+            instruction="Create a plot comparing inflation of Sri Lanka in 2024 and 2025 using the data in sri_lanka_inflation_2024_2025.csv",
+            out_path_v1="chart_v1.png"
+        )
+
+        if not execute_code_draft:
+            print("Skipping first chart execution because no code was generated.")
+            return
+
+        try:
+            exec(execute_code_draft, {"df": df})
+        except Exception as exc:
+            print(f"First chart execution failed: {exc}")
+            return
+
+        execute_code_final = reflect_on_image_and_regenerate(
+            client=client,
+            chart_path="chart_v1.png",
+            instruction="Create a plot comparing inflation of Sri Lanka in 2024 and 2025 using the data in sri_lanka_inflation_2024_2025.csv",
+            out_path_v2="chart_v2.png",
+            code_v1=execute_code_draft,
+        )
+
+        if not execute_code_final:
+            print("Skipping second chart execution because no refined code was generated.")
+            return
+
+        try:
+            exec(execute_code_final, {"df": df})
+        except Exception as exc:
+            print(f"Second chart execution failed: {exc}")
+    except Exception as exc:
+        print(f"Workflow failed: {exc}")
+
+
+if __name__ == "__main__":
+    run_workflow()

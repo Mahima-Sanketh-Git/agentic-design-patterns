@@ -31,15 +31,18 @@ def generate_sql_code(client:genai.Client,question:str,schema:str):
     "draft_sql": "<draft SQL to run>"
     }}
     """
-    
-    response = client.models.generate_content(
-        model="gemini-3.1-flash-lite",
-        contents=prompt
-    )
-    
-    print(response.text)
-    
-    return response.text.strip()
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
+
+        print(response.text)
+
+        return response.text.strip()
+    except Exception as exc:
+        print(f"SQL generation failed: {exc}")
+        return ""
 
 def reflect_on_sql_with_external_feedback_and_regenerate(client:genai.Client,sql_code_v1: str,feedback_v1:str,schema:str):
     prompt = f"""
@@ -66,19 +69,23 @@ def reflect_on_sql_with_external_feedback_and_regenerate(client:genai.Client,sql
     "refined_sql": "<final SQL to run>"
     }}
     """
-    
-    response = client.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents=prompt
-    )
-    
-    print(response.text)
-    
-    return response.text.strip()
+    try:
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=prompt
+        )
+
+        print(response.text)
+
+        return response.text.strip()
+    except Exception as exc:
+        print(f"SQL reflection failed: {exc}")
+        return ""
     
 
 def run_workflow():
-    schema = """
+    try:
+        schema = """
     Table: transactions
     - id (INTEGER)
     - product_id (INTEGER)
@@ -93,20 +100,56 @@ def run_workflow():
     - ts (DATETIME)
     """
 
-    question = "Which color of product has the highest total sales?"
-    
-    sql_code_v1 = generate_sql_code(client,question,schema) # first llm resposne
+        question = "Which color of product has the highest total sales?"
 
-    obj = json.loads(sql_code_v1)
-    code_ouput_v1 = str(obj.get("draft_sql","")).strip()
-    row_output = utils.exec_sql(code_ouput_v1) # run the initial sql (without reflection) code and get results
-    
-    sql_code_v2 = reflect_on_sql_with_external_feedback_and_regenerate(client,sql_code_v1,row_output,schema) # second llm response with feedback and revised code
-    
-    obj_v2 = json.loads(sql_code_v2)
-    row_output_v2 = str(obj_v2.get("refined_sql","")).strip()
-    feedback_v2 = str(obj_v2.get("feedback","")).strip()
-    print(feedback_v2)
-    utils.exec_sql(row_output_v2) # run the final sql code and get results
-    
-run_workflow()
+        sql_code_v1 = generate_sql_code(client, question, schema)
+        if not sql_code_v1:
+            print("Skipping workflow because no SQL draft was generated.")
+            return
+
+        try:
+            obj = json.loads(sql_code_v1)
+        except json.JSONDecodeError as exc:
+            print(f"Could not parse draft SQL JSON: {exc}")
+            return
+
+        code_ouput_v1 = str(obj.get("draft_sql", "")).strip()
+        if not code_ouput_v1:
+            print("Draft SQL is empty.")
+            return
+
+        try:
+            row_output = utils.exec_sql(code_ouput_v1)
+        except Exception as exc:
+            print(f"Initial SQL execution failed: {exc}")
+            return
+
+        sql_code_v2 = reflect_on_sql_with_external_feedback_and_regenerate(client, sql_code_v1, row_output, schema)
+        if not sql_code_v2:
+            print("Skipping final SQL execution because no refined SQL was generated.")
+            return
+
+        try:
+            obj_v2 = json.loads(sql_code_v2)
+        except json.JSONDecodeError as exc:
+            print(f"Could not parse refined SQL JSON: {exc}")
+            return
+
+        row_output_v2 = str(obj_v2.get("refined_sql", "")).strip()
+        feedback_v2 = str(obj_v2.get("feedback", "")).strip()
+        print(feedback_v2)
+
+        if not row_output_v2:
+            print("Refined SQL is empty.")
+            return
+
+        try:
+            utils.exec_sql(row_output_v2)
+        except Exception as exc:
+            print(f"Final SQL execution failed: {exc}")
+    except Exception as exc:
+        print(f"Workflow failed: {exc}")
+
+
+if __name__ == "__main__":
+    run_workflow()
