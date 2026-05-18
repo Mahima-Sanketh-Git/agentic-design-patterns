@@ -160,7 +160,7 @@ Generate a complete, industry-standard README.md for this project following
 the rules in .github/copilot-instructions.md.
 
 Scan the entire codebase including:
-- package.json (name, scripts, dependencies, version)
+- package.json files (name, scripts, dependencies, version)
 - All source files in src/ or apps/
 - Any existing .env.example or config files
 - tsconfig.json files
@@ -173,7 +173,7 @@ no generic descriptions. Every command must be real and runnable.
 ---
 
 ## Constraints
-- Never expose api keys in readme file
+- Never expose API keys in README file
 
 ## ⚡ Quick Inline Prompts (use these in editor)
 
